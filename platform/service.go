@@ -8,7 +8,6 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"github.com/joho/godotenv"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -19,9 +18,12 @@ import (
 	"sync"
 	"time"
 
+	"github.com/joho/godotenv"
+
 	"github.com/ossrs/go-oryx-lib/errors"
 	ohttp "github.com/ossrs/go-oryx-lib/http"
 	"github.com/ossrs/go-oryx-lib/logger"
+
 	// Use v8 because we use Go 1.16+, while v9 requires Go 1.18+
 	"github.com/go-redis/redis/v8"
 )
@@ -227,6 +229,23 @@ func handleHTTPService(ctx context.Context, handler *http.ServeMux) error {
 
 	if err := transcodeWorker.Handle(ctx, handler); err != nil {
 		return errors.Wrapf(err, "handle transcode")
+	}
+
+	// Handle new enhanced features
+	if err := NewHLSInputManager().Handle(ctx, handler); err != nil {
+		return errors.Wrapf(err, "handle HLS input")
+	}
+
+	if err := NewSRTInputManager().Handle(ctx, handler); err != nil {
+		return errors.Wrapf(err, "handle SRT input")
+	}
+
+	if err := NewBypassTranscodeManager().Handle(ctx, handler); err != nil {
+		return errors.Wrapf(err, "handle bypass transcode")
+	}
+
+	if err := NewMonitoringManager().Handle(ctx, handler); err != nil {
+		return errors.Wrapf(err, "handle monitoring")
 	}
 
 	if err := forwardWorker.Handle(ctx, handler); err != nil {
