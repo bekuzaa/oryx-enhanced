@@ -94,8 +94,8 @@ func (v *BypassTranscodeManager) Handle(ctx context.Context, handler *http.Serve
 				Token *string `json:"token"`
 				*BypassTranscodeConfig
 			}{
-				Token:           &token,
-				TranscodeConfig: &config,
+				Token:        &token,
+				BypassTranscodeConfig: &config,
 			}); err != nil {
 				return errors.Wrapf(err, "parse body")
 			}
@@ -128,8 +128,8 @@ func (v *BypassTranscodeManager) Handle(ctx context.Context, handler *http.Serve
 				Token *string `json:"token"`
 				*BypassTranscodeConfig
 			}{
-				Token:           &token,
-				TranscodeConfig: &config,
+				Token:        &token,
+				BypassTranscodeConfig: &config,
 			}); err != nil {
 				return errors.Wrapf(err, "parse body")
 			}

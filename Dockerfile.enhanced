@@ -1,0 +1,180 @@
+# Enhanced Oryx Dockerfile
+# Supports HLS input, SRT input, bypass transcoding, and advanced monitoring
+FROM golang:1.21-alpine AS builder
+
+# Install build dependencies
+RUN apk add --no-cache \
+    git \
+    make \
+    gcc \
+    libc-dev \
+    pkgconfig \
+    ffmpeg-dev \
+    srt-dev \
+    openssl-dev \
+    zlib-dev \
+    jansson-dev \
+    libogg-dev \
+    libvorbis-dev \
+    libvpx-dev \
+    x264-dev \
+    x265-dev \
+    opus-dev \
+    speex-dev \
+    lame-dev \
+    fdk-aac-dev
+
+# Set working directory
+WORKDIR /app
+
+# Copy go mod files
+COPY go.mod go.sum ./
+
+# Download dependencies
+RUN go mod download
+
+# Copy source code
+COPY . .
+
+# Build Oryx with enhanced features
+RUN cd platform && \
+    CGO_ENABLED=1 \
+    GOOS=linux \
+    GOARCH=amd64 \
+    go build -a -installsuffix cgo -ldflags="-s -w" -o oryx .
+
+# Runtime stage
+FROM alpine:3.18
+
+# Install runtime dependencies
+RUN apk add --no-cache \
+    ffmpeg \
+    srt \
+    redis \
+    nginx \
+    ca-certificates \
+    tzdata \
+    curl \
+    bash \
+    supervisor \
+    && rm -rf /var/cache/apk/*
+
+# Create necessary directories
+RUN mkdir -p \
+    /app \
+    /app/logs \
+    /app/config \
+    /app/data \
+    /app/objs/nginx/html \
+    /app/objs/nginx/html/hls \
+    /app/objs/nginx/html/keys \
+    /var/log/nginx \
+    /var/log/redis \
+    /var/log/supervisor
+
+# Copy built binary
+COPY --from=builder /app/platform/oryx /app/oryx
+
+# Copy configuration files
+COPY platform/containers/conf/srs.enhanced.conf /app/config/srs.conf
+COPY platform/containers/conf/nginx.conf /etc/nginx/nginx.conf
+
+# Copy supervisor configuration
+COPY <<EOF /etc/supervisor/conf.d/supervisord.conf
+[supervisord]
+nodaemon=true
+user=root
+logfile=/var/log/supervisor/supervisord.log
+pidfile=/var/run/supervisord.pid
+
+[program:redis]
+command=redis-server --daemonize no --bind 0.0.0.0 --port 6379
+autostart=true
+autorestart=true
+stderr_logfile=/var/log/redis/redis.err.log
+stdout_logfile=/var/log/redis/redis.out.log
+
+[program:nginx]
+command=nginx -g "daemon off;"
+autostart=true
+autorestart=true
+stderr_logfile=/var/log/nginx/nginx.err.log
+stdout_logfile=/var/log/nginx/nginx.out.log
+
+[program:oryx]
+command=/app/oryx
+directory=/app
+autostart=true
+autorestart=true
+stderr_logfile=/app/logs/oryx.err.log
+stdout_logfile=/app/logs/oryx.out.log
+environment=REDIS_ADDR="localhost:6379",SRS_CONFIG="/app/config/srs.conf"
+EOF
+
+# Copy startup script
+COPY <<EOF /app/start.sh
+#!/bin/bash
+set -e
+
+echo "Starting Enhanced Oryx..."
+
+# Wait for Redis to be ready
+echo "Waiting for Redis..."
+until redis-cli ping; do
+    echo "Redis is unavailable - sleeping"
+    sleep 1
+done
+echo "Redis is up - continuing"
+
+# Start all services
+echo "Starting services with supervisor..."
+exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
+EOF
+
+# Make startup script executable
+RUN chmod +x /app/start.sh
+
+# Create health check script
+COPY <<EOF /app/healthcheck.sh
+#!/bin/bash
+set -e
+
+# Check if Oryx is responding
+if curl -f http://localhost:2022/terraform/v1/ffmpeg/query > /dev/null 2>&1; then
+    echo "Oryx is healthy"
+    exit 0
+else
+    echo "Oryx is not responding"
+    exit 1
+fi
+EOF
+
+RUN chmod +x /app/healthcheck.sh
+
+# Set environment variables
+ENV REDIS_ADDR=localhost:6379
+ENV SRS_CONFIG=/app/config/srs.conf
+ENV ORYX_LOG_LEVEL=info
+ENV ORYX_ENABLE_HLS_INPUT=true
+ENV ORYX_ENABLE_SRT_INPUT=true
+ENV ORYX_ENABLE_BYPASS_TRANSCODE=true
+ENV ORYX_ENABLE_MONITORING=true
+
+# Expose ports
+EXPOSE 2022  # Oryx HTTP API
+EXPOSE 1935  # RTMP
+EXPOSE 8080  # HLS/HTTP-FLV
+EXPOSE 1985  # SRS HTTP API
+EXPOSE 10080 # SRT (default)
+EXPOSE 6379  # Redis
+EXPOSE 80    # Nginx
+
+# Set working directory
+WORKDIR /app
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD /app/healthcheck.sh
+
+# Start services
+CMD ["/app/start.sh"]

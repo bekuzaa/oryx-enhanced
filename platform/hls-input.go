@@ -91,8 +91,8 @@ func (v *HLSInputManager) Handle(ctx context.Context, handler *http.ServeMux) er
 				Token *string `json:"token"`
 				*HLSInputConfig
 			}{
-				Token:           &token,
-				TranscodeConfig: &config,
+				Token:        &token,
+				HLSInputConfig: &config,
 			}); err != nil {
 				return errors.Wrapf(err, "parse body")
 			}
@@ -125,8 +125,8 @@ func (v *HLSInputManager) Handle(ctx context.Context, handler *http.ServeMux) er
 				Token *string `json:"token"`
 				*HLSInputConfig
 			}{
-				Token:           &token,
-				TranscodeConfig: &config,
+				Token:        &token,
+				HLSInputConfig: &config,
 			}); err != nil {
 				return errors.Wrapf(err, "parse body")
 			}

@@ -104,8 +104,8 @@ func (v *SRTInputManager) Handle(ctx context.Context, handler *http.ServeMux) er
 				Token *string `json:"token"`
 				*SRTInputConfig
 			}{
-				Token:           &token,
-				TranscodeConfig: &config,
+				Token:        &token,
+				SRTInputConfig: &config,
 			}); err != nil {
 				return errors.Wrapf(err, "parse body")
 			}
@@ -138,8 +138,8 @@ func (v *SRTInputManager) Handle(ctx context.Context, handler *http.ServeMux) er
 				Token *string `json:"token"`
 				*SRTInputConfig
 			}{
-				Token:           &token,
-				TranscodeConfig: &config,
+				Token:        &token,
+				SRTInputConfig: &config,
 			}); err != nil {
 				return errors.Wrapf(err, "parse body")
 			}

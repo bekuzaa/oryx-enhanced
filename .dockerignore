@@ -1,0 +1,48 @@
+# Git
+.git
+.gitignore
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Build artifacts
+*.exe
+*.bin
+platform/oryx
+platform/oryx.exe
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node modules (if any)
+node_modules/
+npm-debug.log*
+
+# Test files
+*_test.go
+test/
+tests/
+
+# Documentation
+*.md
+docs/
+
+# Monitoring configs (will be mounted)
+monitoring/

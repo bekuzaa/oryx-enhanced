@@ -11,34 +11,34 @@ import (
 	"sync"
 	"time"
 
+	"github.com/go-redis/redis/v8"
+	"github.com/google/uuid"
 	"github.com/ossrs/go-oryx-lib/errors"
 	ohttp "github.com/ossrs/go-oryx-lib/http"
 	"github.com/ossrs/go-oryx-lib/logger"
-	"github.com/go-redis/redis/v8"
-	"github.com/google/uuid"
 )
 
 // MonitoringData represents monitoring data points
 type MonitoringData struct {
-	ID          string    `json:"id"`
-	Timestamp   time.Time `json:"timestamp"`
-	Type        string    `json:"type"`        // bandwidth, concurrent_streams
-	Value       float64   `json:"value"`
-	Unit        string    `json:"unit"`        // Mbps, count
-	StreamID    string    `json:"streamId,omitempty"`
-	InputType   string    `json:"inputType,omitempty"`   // hls, srt, rtmp
-	OutputType  string    `json:"outputType,omitempty"`  // hls, srt, rtmp
-	Metadata    map[string]interface{} `json:"metadata,omitempty"`
+	ID         string                 `json:"id"`
+	Timestamp  time.Time              `json:"timestamp"`
+	Type       string                 `json:"type"` // bandwidth, concurrent_streams
+	Value      float64                `json:"value"`
+	Unit       string                 `json:"unit"` // Mbps, count
+	StreamID   string                 `json:"streamId,omitempty"`
+	InputType  string                 `json:"inputType,omitempty"`  // hls, srt, rtmp
+	OutputType string                 `json:"outputType,omitempty"` // hls, srt, rtmp
+	Metadata   map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // MonitoringConfig represents monitoring configuration
 type MonitoringConfig struct {
-	ID              string    `json:"id"`
-	Enabled         bool      `json:"enabled"`
-	SamplingRate   int       `json:"samplingRate"`   // Seconds between samples
-	RetentionDays  int       `json:"retentionDays"`  // Days to keep data
-	CreatedAt      time.Time `json:"createdAt"`
-	UpdatedAt      time.Time `json:"updatedAt"`
+	ID            string    `json:"id"`
+	Enabled       bool      `json:"enabled"`
+	SamplingRate  int       `json:"samplingRate"`  // Seconds between samples
+	RetentionDays int       `json:"retentionDays"` // Days to keep data
+	CreatedAt     time.Time `json:"createdAt"`
+	UpdatedAt     time.Time `json:"updatedAt"`
 }
 
 // MonitoringManager manages monitoring data collection and retrieval
@@ -55,12 +55,12 @@ func NewMonitoringManager() *MonitoringManager {
 	if monitoringManager == nil {
 		monitoringManager = &MonitoringManager{
 			config: &MonitoringConfig{
-				ID:             uuid.New().String(),
-				Enabled:        true,
-				SamplingRate:   5,  // 5 seconds
-				RetentionDays:  30, // 30 days
-				CreatedAt:      time.Now(),
-				UpdatedAt:      time.Now(),
+				ID:            uuid.New().String(),
+				Enabled:       true,
+				SamplingRate:  5,  // 5 seconds
+				RetentionDays: 30, // 30 days
+				CreatedAt:     time.Now(),
+				UpdatedAt:     time.Now(),
 			},
 			rdb:     rdb,
 			metrics: make(map[string]*MonitoringData),
@@ -84,23 +84,19 @@ func (v *MonitoringManager) Handle(ctx context.Context, handler *http.ServeMux) 
 				Period    string    `json:"period"` // daily, weekly, monthly
 			}
 			if err := ParseBody(ctx, r.Body, &struct {
-				Token *string `json:"token"`
-				*struct {
-					Type      string    `json:"type"`
-					StartTime time.Time `json:"startTime"`
-					EndTime   time.Time `json:"endTime"`
-					StreamID  string    `json:"streamId,omitempty"`
-					Period    string    `json:"period"`
-				}
+				Token     *string   `json:"token"`
+				Type      string    `json:"type"`
+				StartTime time.Time `json:"startTime"`
+				EndTime   time.Time `json:"endTime"`
+				StreamID  string    `json:"streamId,omitempty"`
+				Period    string    `json:"period"`
 			}{
-				Token: &token,
-				*struct {
-					Type      string    `json:"type"`
-					StartTime time.Time `json:"startTime"`
-					EndTime   time.Time `json:"endTime"`
-					StreamID  string    `json:"streamId,omitempty"`
-					Period    string    `json:"period"`
-				}: &query,
+				Token:     &token,
+				Type:      query.Type,
+				StartTime: query.StartTime,
+				EndTime:   query.EndTime,
+				StreamID:  query.StreamID,
+				Period:    query.Period,
 			}); err != nil {
 				return errors.Wrapf(err, "parse body")
 			}
@@ -112,7 +108,7 @@ func (v *MonitoringManager) Handle(ctx context.Context, handler *http.ServeMux) 
 
 			data := v.QueryData(ctx, query.Type, query.StartTime, query.EndTime, query.StreamID, query.Period)
 			ohttp.WriteData(ctx, w, r, data)
-			logger.Tf(ctx, "monitoring query ok, type=%v, period=%v, count=%v, token=%vB", 
+			logger.Tf(ctx, "monitoring query ok, type=%v, period=%v, count=%v, token=%vB",
 				query.Type, query.Period, len(data), len(token))
 			return nil
 		}(); err != nil {
@@ -158,8 +154,8 @@ func (v *MonitoringManager) Handle(ctx context.Context, handler *http.ServeMux) 
 				Token *string `json:"token"`
 				*MonitoringConfig
 			}{
-				Token:           &token,
-				TranscodeConfig: &config,
+				Token:            &token,
+				MonitoringConfig: &config,
 			}); err != nil {
 				return errors.Wrapf(err, "parse body")
 			}
@@ -233,10 +229,10 @@ func (v *MonitoringManager) StartMonitoring(ctx context.Context) {
 func (v *MonitoringManager) collectMetrics(ctx context.Context) {
 	// Collect bandwidth metrics
 	v.collectBandwidthMetrics(ctx)
-	
+
 	// Collect concurrent stream metrics
 	v.collectConcurrentStreamMetrics(ctx)
-	
+
 	// Clean up old data
 	v.cleanupOldData(ctx)
 }
@@ -315,7 +311,7 @@ func (v *MonitoringManager) storeMetric(ctx context.Context, metric *MonitoringD
 	}
 }
 
-func (v *MonitoringManager) QueryData(ctx context.Context, dataType, startTime, endTime, streamID, period string) []*MonitoringData {
+func (v *MonitoringManager) QueryData(ctx context.Context, dataType string, startTime, endTime time.Time, streamID, period string) []*MonitoringData {
 	v.mu.RLock()
 	defer v.mu.RUnlock()
 
@@ -383,7 +379,7 @@ func (v *MonitoringManager) aggregateByPeriod(data []*MonitoringData, period str
 
 	for _, metric := range data {
 		periodKey := metric.Timestamp.Format(timeFormat)
-		
+
 		if existing, exists := aggregated[periodKey]; exists {
 			existing.Value += metric.Value
 			// Update metadata
@@ -422,7 +418,7 @@ func (v *MonitoringManager) GetRealTimeMetrics() map[string]interface{} {
 	defer v.mu.RUnlock()
 
 	metrics := make(map[string]interface{})
-	
+
 	// Get latest bandwidth metric
 	var latestBandwidth *MonitoringData
 	for _, metric := range v.metrics {
@@ -489,4 +485,4 @@ func (v *MonitoringManager) cleanupOldData(ctx context.Context) {
 
 	// Clean up Redis (this would be done by TTL, but we can also clean up manually)
 	// TODO: Implement Redis cleanup logic
-} 
+}
