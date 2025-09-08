@@ -82,7 +82,9 @@ status:
 	@echo "  RTMP:              rtmp://localhost:1935"
 	@echo "  HLS/HTTP-FLV:      http://localhost:8080"
 	@echo "  SRS HTTP API:      http://localhost:1985"
-	@echo "  SRT:               localhost:10080"
+	@echo "  SRT (with StreamID):    localhost:10080"
+	@echo "  SRT (no StreamID, 1):   localhost:10081"
+	@echo "  SRT (no StreamID, 2):   localhost:10082"
 	@echo "  Nginx:             http://localhost:80"
 	@echo "  Redis:             localhost:6379"
 

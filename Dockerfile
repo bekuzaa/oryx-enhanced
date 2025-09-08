@@ -71,7 +71,7 @@ RUN curl -O -L https://github.com/ytdl-org/youtube-dl/archive/refs/heads/master.
 FROM ${ARCH}ossrs/oryx:focal-1 AS dist
 
 # Expose ports @see https://github.com/ossrs/oryx/blob/main/DEVELOPER.md#docker-allocated-ports
-EXPOSE 2022 2443 1935 8080 5060 9000 8000/udp 10080/udp
+EXPOSE 2022 2443 1935 8080 5060 9000 8000/udp 10080/udp 10081/udp 10082/udp
 
 # Copy files from build.
 COPY --from=build /usr/local/oryx /usr/local/oryx

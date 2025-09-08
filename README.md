@@ -95,7 +95,9 @@ go build -o oryx .
 | **1935** | RTMP | RTMP input/output |
 | **8080** | HLS/HTTP-FLV | HLS streaming และ HTTP-FLV |
 | **1985** | SRS HTTP API | SRS statistics และ API |
-| **10080** | SRT | SRT input (default port) |
+| **10080** | SRT | SRT input with StreamID (default port) |
+| **10081** | SRT | SRT input without StreamID (stream 1) |
+| **10082** | SRT | SRT input without StreamID (stream 2) |
 | **80** | Nginx | Web interface และ HLS output |
 | **6379** | Redis | Cache และ configuration |
 

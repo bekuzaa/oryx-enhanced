@@ -54,6 +54,8 @@ The enhanced Oryx platform now supports:
 {
   "name": "SRT Input Port",
   "port": 10080,
+  "portNoStreamId1": 10081,
+  "portNoStreamId2": 10082,
   "enabled": true,
   "maxStreams": 2
 }

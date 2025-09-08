@@ -19,6 +19,7 @@
         "logout2": "确认退出么？",
         "dashboard": "仪表盘",
         "scenario": "应用场景",
+        "streamControl": "流控制",
         "system": "系统配置",
         "component": "组件管理",
         "contact": "专享群"
@@ -1372,6 +1373,21 @@
         "optional": "Optional",
         "send": "Send",
         "generate": "Generate"
+      }
+    }
+  },
+  "th": {
+    "translation": {
+      "nav": {
+        "login": "เข้าสู่ระบบ",
+        "logout": "ออกจากระบบ",
+        "logout2": "ยืนยันการออกจากระบบ?",
+        "dashboard": "แดชบอร์ด",
+        "scenario": "สถานการณ์การใช้งาน",
+        "streamControl": "ควบคุมสตรีม",
+        "system": "การตั้งค่าระบบ",
+        "component": "จัดการคอมโพเนนต์",
+        "contact": "ติดต่อ"
       }
     }
   }

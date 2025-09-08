@@ -37,7 +37,7 @@ docker-compose -f docker-compose.enhanced.yml up -d
 docker run -d \
   --name enhanced-oryx \
   -p 2022:2022 -p 1935:1935 -p 8080:8080 \
-  -p 1985:1985 -p 10080:10080 -p 80:80 \
+  -p 1985:1985 -p 10080:10080 -p 10081:10081 -p 10082:10082 -p 80:80 \
   enhanced-oryx:latest
 ```
 
@@ -66,7 +66,9 @@ docker run -d \
 | 1935 | RTMP | RTMP input/output |
 | 8080 | HLS/HTTP-FLV | HLS streaming และ HTTP-FLV |
 | 1985 | SRS HTTP API | SRS statistics และ API |
-| 10080 | SRT | SRT input (default port) |
+| 10080 | SRT | SRT input with StreamID (default port) |
+| 10081 | SRT | SRT input without StreamID (stream 1) |
+| 10082 | SRT | SRT input without StreamID (stream 2) |
 | 80 | Nginx | Web interface และ HLS output |
 | 6379 | Redis | Cache และ configuration |
 
@@ -127,6 +129,8 @@ curl -X POST http://localhost:2022/terraform/v1/srt/input/create \
     "token": "your_token",
     "name": "My SRT Stream",
     "port": 10080,
+    "portNoStreamId1": 10081,
+    "portNoStreamId2": 10082,
     "enabled": true
   }'
 ```

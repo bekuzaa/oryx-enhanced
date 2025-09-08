@@ -248,6 +248,10 @@ func handleHTTPService(ctx context.Context, handler *http.ServeMux) error {
 		return errors.Wrapf(err, "handle monitoring")
 	}
 
+	if err := NewStreamManager().Handle(ctx, handler); err != nil {
+		return errors.Wrapf(err, "handle stream control")
+	}
+
 	if err := forwardWorker.Handle(ctx, handler); err != nil {
 		return errors.Wrapf(err, "handle forward")
 	}

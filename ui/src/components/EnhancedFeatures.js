@@ -207,7 +207,13 @@ const SRTInputManager = () => {
   const [inputs, setInputs] = useState([]);
   const [streams, setStreams] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [newInput, setNewInput] = useState({ name: '', port: 10080, enabled: true });
+  const [newInput, setNewInput] = useState({ 
+    name: '', 
+    port: 10080, 
+    portNoStreamId1: 10081, 
+    portNoStreamId2: 10082, 
+    enabled: true 
+  });
   const [error, setError] = useState('');
 
   const fetchInputs = async () => {
@@ -240,7 +246,13 @@ const SRTInputManager = () => {
       });
       const data = await response.json();
       if (data.code === 0) {
-        setNewInput({ name: '', port: 10080, enabled: true });
+        setNewInput({ 
+          name: '', 
+          port: 10080, 
+          portNoStreamId1: 10081, 
+          portNoStreamId2: 10082, 
+          enabled: true 
+        });
         fetchInputs();
       }
     } catch (err) {
@@ -285,13 +297,34 @@ const SRTInputManager = () => {
                 onChange={(e) => setNewInput({ ...newInput, name: e.target.value })}
               />
             </Grid>
-            <Grid item xs={3}>
+            <Grid item xs={2}>
               <TextField
                 fullWidth
-                label="Port"
+                label="Port (StreamID)"
                 type="number"
                 value={newInput.port}
                 onChange={(e) => setNewInput({ ...newInput, port: parseInt(e.target.value) })}
+                helperText="Default: 10080"
+              />
+            </Grid>
+            <Grid item xs={2}>
+              <TextField
+                fullWidth
+                label="Port (No StreamID 1)"
+                type="number"
+                value={newInput.portNoStreamId1}
+                onChange={(e) => setNewInput({ ...newInput, portNoStreamId1: parseInt(e.target.value) })}
+                helperText="Default: 10081"
+              />
+            </Grid>
+            <Grid item xs={2}>
+              <TextField
+                fullWidth
+                label="Port (No StreamID 2)"
+                type="number"
+                value={newInput.portNoStreamId2}
+                onChange={(e) => setNewInput({ ...newInput, portNoStreamId2: parseInt(e.target.value) })}
+                helperText="Default: 10082"
               />
             </Grid>
             <Grid item xs={3}>
@@ -320,7 +353,9 @@ const SRTInputManager = () => {
             <TableHead>
               <TableRow>
                 <TableCell>Name</TableCell>
-                <TableCell>Port</TableCell>
+                <TableCell>Port (StreamID)</TableCell>
+                <TableCell>Port (No StreamID 1)</TableCell>
+                <TableCell>Port (No StreamID 2)</TableCell>
                 <TableCell>Status</TableCell>
                 <TableCell>Stream Count</TableCell>
                 <TableCell>Max Streams</TableCell>
@@ -332,6 +367,8 @@ const SRTInputManager = () => {
                 <TableRow key={input.id}>
                   <TableCell>{input.name}</TableCell>
                   <TableCell>{input.port}</TableCell>
+                  <TableCell>{input.portNoStreamId1 || 'N/A'}</TableCell>
+                  <TableCell>{input.portNoStreamId2 || 'N/A'}</TableCell>
                   <TableCell>
                     <Chip
                       label={input.status}

@@ -30,6 +30,7 @@ import Components from "./pages/Components";
 import Scenario from "./pages/Scenario";
 import Settings from "./pages/Settings";
 import Contact from "./pages/Contact";
+import StreamControl from "./pages/StreamControl";
 import {ErrorBoundary, useErrorHandler} from 'react-error-boundary';
 import {SrsErrorBoundary} from "./components/SrsErrorBoundary";
 import resources from "./resources/locale.json";
@@ -147,6 +148,7 @@ function AppRoute({initialized, setInitialized}) {
                 <Route path="routers-settings" element={<Settings/>}/>
                 <Route path="routers-contact" element={<Contact/>}/>
                 <Route path="routers-components" element={<Components/>}/>
+                <Route path="routers-stream-control" element={<StreamControl/>}/>
                 <Route path="routers-logout" element={<Logout onLogout={() => setTokenUpdated(!tokenUpdated)}/>}/>
               </>}
               {initialized === 1 && <Route path="routers-popout" element={<Popouts/>}/>}

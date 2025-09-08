@@ -165,7 +165,9 @@ EXPOSE 2022  # Oryx HTTP API
 EXPOSE 1935  # RTMP
 EXPOSE 8080  # HLS/HTTP-FLV
 EXPOSE 1985  # SRS HTTP API
-EXPOSE 10080 # SRT (default)
+EXPOSE 10080 # SRT (with StreamID)
+EXPOSE 10081 # SRT (without StreamID, stream 1)
+EXPOSE 10082 # SRT (without StreamID, stream 2)
 EXPOSE 6379  # Redis
 EXPOSE 80    # Nginx
 

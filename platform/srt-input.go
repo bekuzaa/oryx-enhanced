@@ -20,16 +20,18 @@ import (
 
 // SRTInputConfig represents the configuration for SRT input
 type SRTInputConfig struct {
-	ID          string    `json:"id"`
-	Name        string    `json:"name"`
-	Port        int       `json:"port"`
-	Enabled     bool      `json:"enabled"`
-	CreatedAt   time.Time `json:"createdAt"`
-	UpdatedAt   time.Time `json:"updatedAt"`
-	Status      string    `json:"status"` // active, inactive, error
-	LastError   string    `json:"lastError,omitempty"`
-	StreamCount int       `json:"streamCount"`
-	MaxStreams  int       `json:"maxStreams"` // Maximum 2 streams
+	ID              string    `json:"id"`
+	Name            string    `json:"name"`
+	Port            int       `json:"port"`            // Port for SRT with StreamID (default: 10080)
+	PortNoStreamId1 int       `json:"portNoStreamId1"` // Port for SRT without StreamID, stream 1 (default: 10081)
+	PortNoStreamId2 int       `json:"portNoStreamId2"` // Port for SRT without StreamID, stream 2 (default: 10082)
+	Enabled         bool      `json:"enabled"`
+	CreatedAt       time.Time `json:"createdAt"`
+	UpdatedAt       time.Time `json:"updatedAt"`
+	Status          string    `json:"status"` // active, inactive, error
+	LastError       string    `json:"lastError,omitempty"`
+	StreamCount     int       `json:"streamCount"`
+	MaxStreams      int       `json:"maxStreams"` // Maximum 2 streams
 }
 
 // SRTStream represents an individual SRT stream
@@ -104,7 +106,7 @@ func (v *SRTInputManager) Handle(ctx context.Context, handler *http.ServeMux) er
 				Token *string `json:"token"`
 				*SRTInputConfig
 			}{
-				Token:        &token,
+				Token:          &token,
 				SRTInputConfig: &config,
 			}); err != nil {
 				return errors.Wrapf(err, "parse body")
@@ -138,7 +140,7 @@ func (v *SRTInputManager) Handle(ctx context.Context, handler *http.ServeMux) er
 				Token *string `json:"token"`
 				*SRTInputConfig
 			}{
-				Token:        &token,
+				Token:          &token,
 				SRTInputConfig: &config,
 			}); err != nil {
 				return errors.Wrapf(err, "parse body")
@@ -241,9 +243,26 @@ func (v *SRTInputManager) CreateInput(ctx context.Context, config *SRTInputConfi
 	config.Status = "inactive"
 	config.MaxStreams = 2 // Fixed to 2 streams
 
-	// Validate port
+	// Set default ports if not specified
+	if config.Port <= 0 {
+		config.Port = 10080 // Default port for SRT with StreamID
+	}
+	if config.PortNoStreamId1 <= 0 {
+		config.PortNoStreamId1 = 10081 // Default port for SRT without StreamID, stream 1
+	}
+	if config.PortNoStreamId2 <= 0 {
+		config.PortNoStreamId2 = 10082 // Default port for SRT without StreamID, stream 2
+	}
+
+	// Validate ports
 	if config.Port <= 0 || config.Port > 65535 {
 		return errors.Errorf("invalid port: %v", config.Port)
+	}
+	if config.PortNoStreamId1 <= 0 || config.PortNoStreamId1 > 65535 {
+		return errors.Errorf("invalid portNoStreamId1: %v", config.PortNoStreamId1)
+	}
+	if config.PortNoStreamId2 <= 0 || config.PortNoStreamId2 > 65535 {
+		return errors.Errorf("invalid portNoStreamId2: %v", config.PortNoStreamId2)
 	}
 
 	// Save to Redis
@@ -414,7 +433,8 @@ func (v *SRTInputManager) StartInput(ctx context.Context, inputID string) error 
 }
 
 func (v *SRTInputManager) processSRTInput(ctx context.Context, input *SRTInputConfig) {
-	logger.Tf(ctx, "start processing SRT input on port: %v", input.Port)
+	logger.Tf(ctx, "start processing SRT input on ports: %v (StreamID), %v (No StreamID 1), %v (No StreamID 2)",
+		input.Port, input.PortNoStreamId1, input.PortNoStreamId2)
 
 	// Update status to active
 	input.Status = "active"
@@ -423,10 +443,14 @@ func (v *SRTInputManager) processSRTInput(ctx context.Context, input *SRTInputCo
 
 	// TODO: Implement SRT stream processing logic
 	// This would involve:
-	// 1. Listening on the specified port
-	// 2. Accepting SRT connections (max 2)
+	// 1. Listening on the specified ports:
+	//    - Port for SRT with StreamID (default: 10080)
+	//    - Port for SRT without StreamID, stream 1 (default: 10081)
+	//    - Port for SRT without StreamID, stream 2 (default: 10082)
+	// 2. Accepting SRT connections (max 2 per port type)
 	// 3. Forwarding to SRS without re-encoding
 	// 4. Monitoring stream health and connection status
 
-	logger.Tf(ctx, "SRT input processing started on port: %v", input.Port)
+	logger.Tf(ctx, "SRT input processing started on ports: %v (StreamID), %v (No StreamID 1), %v (No StreamID 2)",
+		input.Port, input.PortNoStreamId1, input.PortNoStreamId2)
 }

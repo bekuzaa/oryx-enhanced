@@ -12,7 +12,9 @@ services:
       - "1935:1935"    # RTMP
       - "8080:8080"    # HLS/HTTP-FLV
       - "1985:1985"    # SRS HTTP API
-      - "10080:10080"  # SRT (default)
+      - "10080:10080"  # SRT (with StreamID)
+      - "10081:10081"  # SRT (without StreamID, stream 1)
+      - "10082:10082"  # SRT (without StreamID, stream 2)
       - "80:80"        # Nginx
     environment:
       - REDIS_ADDR=redis:6379

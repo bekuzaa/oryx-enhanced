@@ -20,6 +20,7 @@ import (
 
 	"github.com/ossrs/go-oryx-lib/errors"
 	"github.com/ossrs/go-oryx-lib/logger"
+
 	// Use v8 because we use Go 1.16+, while v9 requires Go 1.18+
 	"github.com/go-redis/redis/v8"
 	"github.com/google/uuid"
@@ -125,6 +126,8 @@ func doMain(ctx context.Context) error {
 	setEnvDefault("RTMP_PORT", "1935")
 	setEnvDefault("HTTP_PORT", "")
 	setEnvDefault("SRT_PORT", "10080")
+	setEnvDefault("SRT_PORT_NO_STREAMID_1", "10081")
+	setEnvDefault("SRT_PORT_NO_STREAMID_2", "10082")
 	setEnvDefault("RTC_PORT", "8000")
 
 	// For system limit.

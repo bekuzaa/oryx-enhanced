@@ -15,6 +15,8 @@ HTTPS_PORT=2443
 RTMP_PORT=1935
 RTC_PORT=8000
 SRT_PORT=10080
+SRT_PORT_NO_STREAMID_1=10081
+SRT_PORT_NO_STREAMID_2=10082
 NGINX_RELOAD="/etc/init.d/nginx reload"
 
 echo -n "DATA_HOME=${DATA_HOME}, WELL_KNOWN=${WELL_KNOWN}, IMAGE=${IMAGE}, MGMT_PORT=${MGMT_PORT}, RTMP_PORT=${RTMP_PORT}"
@@ -27,7 +29,7 @@ docker rm -f oryx 2>/dev/null
 echo "Start platform container"
 CMD="docker run -v ${DATA_HOME}:/data -v ${WELL_KNOWN}:/data/.well-known ${EXTRA_PARAMS}
     -p ${MGMT_PORT}:2022/tcp -p ${HTTPS_PORT}:2443/tcp -p ${RTMP_PORT}:1935/tcp
-    -p ${RTC_PORT}:8000/udp -p ${SRT_PORT}:10080/udp
+    -p ${RTC_PORT}:8000/udp -p ${SRT_PORT}:10080/udp -p ${SRT_PORT_NO_STREAMID_1}:10081/udp -p ${SRT_PORT_NO_STREAMID_2}:10082/udp
     --log-driver=json-file --log-opt=max-size=1g --log-opt=max-file=3
     --restart no -it --name oryx --detach
     ${IMAGE}"
