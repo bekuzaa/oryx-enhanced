@@ -1,28 +1,30 @@
 # Enhanced Oryx Dockerfile
 # Supports HLS input, SRT input, bypass transcoding, and advanced monitoring
-FROM golang:1.21-alpine AS builder
+FROM golang:1.21-bookworm AS builder
 
-# Install build dependencies
-RUN apk add --no-cache \
+## Install build dependencies
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
     git \
     make \
     gcc \
-    libc-dev \
-    pkgconfig \
-    ffmpeg-dev \
-    srt-dev \
-    openssl-dev \
-    zlib-dev \
-    jansson-dev \
+    g++ \
+    libc6-dev \
+    pkg-config \
+    ffmpeg \
+    libssl-dev \
+    zlib1g-dev \
+    libjansson-dev \
     libogg-dev \
     libvorbis-dev \
     libvpx-dev \
-    x264-dev \
-    x265-dev \
-    opus-dev \
-    speex-dev \
-    lame-dev \
-    fdk-aac-dev
+    libx264-dev \
+    libx265-dev \
+    libopus-dev \
+    libspeex-dev \
+    libmp3lame-dev \
+    libfdk-aac-dev \
+    libsrt-openssl-dev \
+ && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
 WORKDIR /app
@@ -43,21 +45,21 @@ RUN cd platform && \
     GOARCH=amd64 \
     go build -a -installsuffix cgo -ldflags="-s -w" -o oryx .
 
-# Runtime stage
-FROM alpine:3.18
+## Runtime stage
+FROM debian:bookworm-slim
 
-# Install runtime dependencies
-RUN apk add --no-cache \
+## Install runtime dependencies
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
     ffmpeg \
-    srt \
-    redis \
+    libsrt-openssl \
+    redis-server \
     nginx \
     ca-certificates \
     tzdata \
     curl \
     bash \
     supervisor \
-    && rm -rf /var/cache/apk/*
+ && rm -rf /var/lib/apt/lists/*
 
 # Create necessary directories
 RUN mkdir -p \
